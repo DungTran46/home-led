@@ -30,6 +30,7 @@ class MqttMgr {
 		void setMqttUsername(char in[MAX_CHAR]);
 		void setMqttPasswords(char in[MAX_CHAR]);
 		void setMqttPort(int);
+		void connectToMqtt();
 			
 	private:
 		MqttStruct MqttData;
