@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "led.hpp"    
-#include "MqttCredential.hpp"
+#include "MqttMgrClass.hpp"
 
 //Wifi credential declaration 
 const char* ssid = "NETGEAR44";

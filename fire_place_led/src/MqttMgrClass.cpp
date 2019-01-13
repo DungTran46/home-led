@@ -1,4 +1,4 @@
-#include "..\MqttCredential.hpp"
+#include "..\MqttMgrClass.hpp"
 #include <string.h>
 #include <Arduino.h>
 
