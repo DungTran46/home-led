@@ -1,159 +1,112 @@
-#include <WiFi.h>
-#include <PubSubClient.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "led.hpp"    
+
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include "led.h"    
 #include "MqttMgrClass.hpp"
+#include "WifiMgrClass.hpp"
 
-//Wifi credential declaration 
-const char* ssid = "NETGEAR44";
-const char* password = "xuatcanh01";
-
-//MQTT credential decleration
-const char* mqttServer = "b37.mqtt.one";
-const int mqttPort = 1883;
-const char* mqttUser = "6ikpsw474";
-const char* mqttPassword = "bchmpqtwyz";
-char mqttCmd[50];
-char mqttValue[50];
-WiFiClient espClient;
-PubSubClient client(espClient);
-
+WifiMgrClass wifiManager;
+MqttMgrClass mqttManager;
 
 //other variable
 bool mqtt_flat=false;
 char* mqtt_topic;
-int t=BLINK_TIME;
+int blink_time = DEFALT__BLINK_TIME;
 
+void setup() {
 
+    Serial.begin(115200);
+    // put your setup code here, to run once:
+    pinMode(LED_RED,  OUTPUT);
+    pinMode(LED_BLUE, OUTPUT);
 
+    //set off state for all led
+    digitalWrite(LED_RED, LOW);
+    digitalWrite(LED_BLUE, LOW);
 
+    //setup wifi
+    Serial.println("Connect to WIFI");
 
-void setup() 
-{
-  // put your setup code here, to run once:
-  pinMode(LED_RED,  OUTPUT);
-  pinMode(LED_BLUE, OUTPUT);
-  
-  //set off state for all led
-  digitalWrite(LED_RED, LOW);
-  digitalWrite(LED_BLUE, LOW);
-  //setup wifi
-  WiFi.begin(ssid);
-  int timeOut=0;
-  while (WiFi.status() != WL_CONNECTED){
-    if(timeOut>TIMEOUT_LIMIT)
-    {
-      break;
+    Serial.print("SSID: ");
+    Serial.println(wifiManager.GetSsid());
+
+    Serial.print("PASSWORD: ");
+    Serial.println(wifiManager.GetPassword());
+
+    if(!wifiManager.SetupWifi()) {
+
+        Serial.println(">>>>FAIL to connect to Wifi<<<<");
+        Serial.println(">>>>IGNORE to setup to MQTT<<<<");
+        return;
     }
-    delay(1000);
-    timeOut++;
-  }
-  timeOut=0;
-  
-  //Connect to MQTT
-  client.setServer(mqttServer, mqttPort); //connect to server
-  client.setCallback(callback);
-  while (!client.connected()) 
-  {
-    if(timeOut>TIMEOUT_LIMIT)
-    {
-      Serial.println("Unable to connect to wifi");
-      break;
+
+    Serial.println("WIFI connect SUCCESSFULLY");
+
+    //Connect to MQTT
+    Serial.println("Connect to MQTT");
+
+    Serial.print("SERVER");
+    Serial.println(mqttManager.GetMqttServer());
+
+    Serial.println("PORT");
+    Serial.println(mqttManager.GetMqttPort());
+
+    Serial.println("USERNAME");
+    Serial.println(mqttManager.GetMqttUsername());
+
+    Serial.println("PASSWORD");
+    Serial.println(mqttManager.GetMqttpasswords());
+
+    if(!mqttManager.ConnectToMqtt()) {
+
+        Serial.println(">>>>FAIL to connect to MQTT SERVER<<<<");
+        return;
     }
-    timeOut++;
-    delay(1000);
-  }
-  client.subscribe("6ikpsw474/Led");
+
+    Serial.println("MQTT SERVER connect SUCCESSFULLY");
+    mqttManager.client.setCallback(callback);
+    mqttManager.client.subscribe("6ikpsw474/Led");
 
 } 
 
 void loop() {
-  client.loop();//start up MQTT LOOP
-  if(mqtt_flat==false)
-  {
-    normalMode(BLINK_TIME);
-  }
-  else{
-    normalMode(t);
-    if(String(mqttCmd)=="WHITE")
-    {
-      digitalWrite(LED_RED, HIGH);
-      digitalWrite(LED_BLUE, HIGH);
-    }
-    else if(String(mqttCmd)=="BLUE")
-    {
-      digitalWrite(LED_RED, LOW);
-      digitalWrite(LED_BLUE, HIGH);
-    }
-    else if(String(mqttCmd)=="RED")
-    {
-      digitalWrite(LED_RED, HIGH);
-      digitalWrite(LED_BLUE, LOW);
-    }
-    else if(String(mqttCmd)=="GREEN")
-    {
-      digitalWrite(LED_RED, LOW);
-      digitalWrite(LED_BLUE, LOW);
-    }
-    else if(String(mqttCmd)=="NORMAL")
-    {
-      t= (int)mqttValue;
-    }
-  }
+    mqttManager.client.loop();//start up MQTT LOOP
+    if(mqtt_flat==false) {
 
-}
-void normalMode(int t)
-{
-    // put your main code here, to run repeatedly:
-    blink_red(t);
-    blink_blue(t);
-    blink_both(t);
-    off_both(t);
-}
-/*
- * blink the red led
- * @t time in minisecond
- *  return nothing
- */
-void blink_red(int t)
-{
-  digitalWrite(LED_RED, HIGH);
-  delay(t);
-  digitalWrite(LED_RED, LOW);
-}
+        normalMode(DEFALT__BLINK_TIME);
 
-/*
- * blink the red blue
- * @t time in minisecond
- *  return nothing
- */
- void blink_blue(int t)
-{
-  digitalWrite(LED_BLUE, HIGH);
-  delay(t);
-  digitalWrite(LED_BLUE, LOW);
-}
-/*
- * blink the red and the blue
- * @t time in minisecond
- *  return nothing
- */
-void blink_both(int t)
-{
-  digitalWrite(LED_RED, HIGH);
-  digitalWrite(LED_BLUE, HIGH);
-  delay(t);
-  digitalWrite(LED_RED, LOW);
-  digitalWrite(LED_BLUE, LOW);
-}
+    } else {
+        blink_time=2000;
+        normalMode(blink_time);
+        // if(String(mqttCmd)=="WHITE")
+        // {
+        //     digitalWrite(LED_RED, HIGH);
+        //     digitalWrite(LED_BLUE, HIGH);
+        // }
+        // else if(String(mqttCmd)=="BLUE")
+        // {
+        //     digitalWrite(LED_RED, LOW);
+        //     digitalWrite(LED_BLUE, HIGH);
+        // }
+        // else if(String(mqttCmd)=="RED")
+        // {
+        //     digitalWrite(LED_RED, HIGH);
+        //     digitalWrite(LED_BLUE, LOW);
+        // }
+        // else if(String(mqttCmd)=="GREEN")
+        // {
+        //     digitalWrite(LED_RED, LOW);
+        //     digitalWrite(LED_BLUE, LOW);
+        // }
+        // else if(String(mqttCmd)=="NORMAL")
+        // {
+        //     t= (int)mqttValue;
+        // }
+    }
 
-void off_both(int t)
-{  
-  digitalWrite(LED_RED, LOW);
-  digitalWrite(LED_BLUE, LOW);
-  delay(t);
 }
 
 /*******************************************************************************
@@ -161,25 +114,29 @@ void off_both(int t)
 ********************************************************************************/
 void callback(char* topic, byte* payload, unsigned int length)
 {
-  mqtt_flat=true;
-  bool space_flat=false;
-  for (int i = 0; i <length; i++) 
-  {
-    if((char)payload[i]==' ')
-    {
-      space_flat=true;
-      break;
+    mqtt_flat=true;
+    bool space_flat=false;
+    Serial.println(topic);
+    for (int i = 0; i <length; i++) {
+
+        Serial.print(payload[i]);
+        // if((char)payload[i]==' ')
+        // {
+        //     space_flat=true;
+        //     break;
+        // }
+        // if(space_flat==false)
+        // {
+        //     mqttCmd[i]=(char)payload[i];
+        // }
+        // else
+        // {
+        //     mqttValue[i]=(char)payload[i];
+        // }
+
     }
-    if(space_flat==false)
-    {
-      mqttCmd[i]=(char)payload[i];
-    }
-    else
-    {
-      mqttValue[i]=(char)payload[i];
-    }
-  }
-  
-  mqtt_flat=1;
-  mqtt_topic=topic;
+
+    Serial.println();
+    mqtt_flat=1;
+    mqtt_topic=topic;
 }
