@@ -1,38 +1,44 @@
-// MQTT data structure
+// MQTT data structure and constants
 #include "Constants.hpp"
+#include <WiFi.h>
+#include <PubSubClient.h>
 
-#define DEFAULT_SERVER 		"m15.cloudmqtt.com"
-#define DEFAULT_PORT		19296
-#define DEFAULT_USERNAME	"csrqtrmh"
-#define DEFAULT_PASSWORDS	"EWG6Ui9Di3o6"
+#define DEFAULT_SERVER "m14.cloudmqtt.com"
+#define DEFAULT_PORT 10472
+#define DEFAULT_USERNAME "stbnyubs"
+#define DEFAULT_PASSWORDS "m7dmso3dOAhI"
 
-struct MqttStuct {
+typedef struct {
 	char	server[MAX_CHAR];
 	int		port;
 	char	username[MAX_CHAR];
 	char	passwords[MAX_CHAR];
-}
+} MqttStruct;
 
-class MqttMgr {
-	public:
-		//Contructor
-		MqttMgr(char ser[MAX_CHAR], 
-				int p = DEFAULT_PORT, 
-				char uname[MAX_CHAR] = DEFAULT_USERNAME, 
-				char pass[MAX_CHAR] = DEFAULT_PASSWORDS);
+class MqttMgrClass {
+public:
+	//Contructor
+	MqttMgrClass(	char ser[MAX_CHAR]=DEFAULT_SERVER, 
+					int p = DEFAULT_PORT, 
+					char uname[MAX_CHAR] = DEFAULT_USERNAME, 
+					char pass[MAX_CHAR] = DEFAULT_PASSWORDS);
+	
+	char_ptr GetMqttServer();
+	char_ptr GetMqttUsername();
+	char_ptr GetMqttpasswords();
+	int GetMqttPort();
+	
+	void SetMqttServer(char in[MAX_CHAR]);
+	void SetMqttUsername(char in[MAX_CHAR]);
+	void SetMqttPasswords(char in[MAX_CHAR]);
+	void SetMqttPort(int);
+	bool ConnectToMqtt();
+
+	PubSubClient client;
+
+private:
+
+	WiFiClient EspClient;
+	MqttStruct Mqttinfo;
 		
-		char_ptr getMqttServer();
-		char_ptr getMqttUsername();
-		char_ptr getMqttpasswords();
-		int getMqttPort();
-		
-		void setMqttServer(char in[MAX_CHAR);
-		void setMqttUsername(char in[MAX_CHAR]);
-		void setMqttPasswords(char in[MAX_CHAR]);
-		void setMqttPort(int);
-		void connectToMqtt();
-			
-	private:
-		MqttStruct MqttData;
-		
-}	
+};
